@@ -1,44 +1,34 @@
 package query
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/url"
 )
 
 type masterDbConfig struct {
-	localUrl    string
+	localDb     *sql.DB
 	masterDbUrl string
 	useMasterDb bool
 }
 
 // NewMasterDbConfig creates a new instance of masterDbConfig with validation
 func NewMasterDbConfig(
-	localUrl string,
+	localDb *sql.DB,
 	masterDbUrl string,
 	useMasterDb bool,
 ) (*masterDbConfig, error) {
-	// Validate URLs
-	if err := validateDbUrl(localUrl); err != nil {
-		return nil, fmt.Errorf("invalid local URL: %w", err)
-	}
+
 	if err := validateDbUrl(masterDbUrl); err != nil {
 		return nil, fmt.Errorf("invalid master URL: %w", err)
 	}
 
 	return &masterDbConfig{
-		localUrl:    localUrl,
+		localDb:     localDb,
 		masterDbUrl: masterDbUrl,
 		useMasterDb: useMasterDb,
 	}, nil
-}
-
-// GetDbUrl returns the appropriate database URL based on configuration
-func (c *masterDbConfig) GetDbUrl() string {
-	if c.useMasterDb {
-		return c.masterDbUrl
-	}
-	return c.localUrl
 }
 
 // CreateQueryBuilder creates a new AssetQueryBuilder instance

@@ -2,15 +2,25 @@ package main
 
 import (
 	"asset-query/pkg/query"
-	"fmt"
+	"database/sql"
 	"log"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
+
+	localDbUrl := "postgres://postgres:password@localhost:5432/layerg-masterdb?sslmode=disable"
+
+	localDb, err := sql.Open("postgres", localDbUrl)
+	if err != nil {
+		log.Fatalf("Failed to connect to local database: %v", err)
+	}
+
 	// Initialize database configuration
 	masterDbClient, err := query.NewMasterDbConfig(
-		"postgresql://localhost:5432/localdb",
+		localDb,
 		"https://44b3-14-241-247-139.ngrok-free.app",
 		true,
 	)
@@ -19,20 +29,17 @@ func main() {
 	}
 
 	// Get the database URL
-	dbUrl := masterDbClient.GetDbUrl()
-	fmt.Printf("Using database: %s\n\n", dbUrl)
 
 	// Create a new asset query builder using the configuration
 	asset := masterDbClient.CreateQueryBuilder().
 		WithChainId(1).
 		WithCollectionId("1:0x0091BD12166d29539Db6bb37FB79670779aBf266").
-		WithTokenIds([]string{"1", "2", "3"}).
-		WithOwner("0x821dAb5C6fffD8183d4E3e4A5C1725c847c36789").
+		// WithTokenIds([]string{"1", "2", "3"}).
+		// WithOwner("0x821dAb5C6fffD8183d4E3e4A5C1725c847c36789").
 		WithCreatedAtFrom(time.Date(2025, 1, 5, 0, 0, 0, 0, time.UTC)).
 		WithCreatedAtTo(time.Date(2025, 1, 10, 0, 0, 0, 0, time.UTC)).
 		WithPage(1).
 		WithLimit(10).
-		WithOffset(0).
 		Build()
 
 	_, err = asset.GetPaginatedAsset()

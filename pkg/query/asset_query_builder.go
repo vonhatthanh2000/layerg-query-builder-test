@@ -32,21 +32,24 @@ type assetQueryBuilderParam struct {
 	config        *masterDbConfig
 }
 
-// WithChainId implements AssetQueryBuilder.
-func (b *assetQueryBuilderParam) getCollectionType() (*HttpClient, masterDbCommon.CollectionType) {
-	client := NewHttpClient(b.config.GetDbUrl())
+func (b *assetQueryBuilderParam) getHttpClient() *HttpClient {
+	client := NewHttpClient(b.config.masterDbUrl)
+	return client
+}
 
-	fmt.Println("b.config.GetDbUrl()", b.config.GetDbUrl())
+// WithChainId implements AssetQueryBuilder.
+func (b *assetQueryBuilderParam) getCollectionType() masterDbCommon.CollectionType {
+	client := b.getHttpClient()
 
 	var response response.HTTPResponse[masterDbCommon.CollectionResponse]
 	path := fmt.Sprintf("/chain/%d/collection/%s", b.chainId, *b.collectionId)
 	err := client.DoRequest(context.Background(), "GET", path, nil, &response)
 	if err != nil {
 		fmt.Println("err", err)
-		return nil, masterDbCommon.CollectionType("")
+		return masterDbCommon.CollectionType("")
 	}
 
-	return client, response.Data.Type
+	return response.Data.Type
 }
 
 // WithChainId implements AssetQueryBuilder.
@@ -76,12 +79,6 @@ func (b *assetQueryBuilderParam) WithCreatedAtTo(createdAtTo time.Time) AssetQue
 // WithLimit implements AssetQueryBuilder.
 func (b *assetQueryBuilderParam) WithLimit(limit int) AssetQueryBuilder {
 	b.limit = &limit
-	return b
-}
-
-// WithOffset implements AssetQueryBuilder.
-func (b *assetQueryBuilderParam) WithOffset(offset int) AssetQueryBuilder {
-	b.offset = &offset
 	return b
 }
 
@@ -117,25 +114,100 @@ type AssetQueryBuilder interface {
 	WithCreatedAtTo(createdAtTo time.Time) AssetQueryBuilder
 	WithPage(page int) AssetQueryBuilder
 	WithLimit(limit int) AssetQueryBuilder
-	WithOffset(offset int) AssetQueryBuilder
 	Build() AssetQueryFunction
 }
 
 func (b *assetQueryBuilderParam) Build() AssetQueryFunction {
+	// Set default values if not provided
+	defaultPage := 1
+	defaultLimit := 10
+
+	if b.page != nil {
+		if *b.page < 1 {
+			return nil
+		}
+		defaultPage = *b.page
+	}
+
+	if b.limit != nil {
+		if *b.limit > 100 {
+			return nil
+		}
+		defaultLimit = *b.limit
+	}
+
+	// Calculate offset
+	offset := (defaultPage - 1) * defaultLimit
+	b.offset = &offset
 	return b
 }
 
 func (b *assetQueryBuilderParam) GetAssetQueryBuilder() (*assetQueryBuilderParam, error) {
-	fmt.Println("GetAssetQueryBuilder")
-
 	if b.chainId == 0 {
 		return nil, errors.New("chainId is required")
 	}
 	return b, nil
 }
 
-func (b *assetQueryBuilderParam) GetPaginatedAsset() (any, error) {
-	httpClient, collectionType := b.getCollectionType()
+func (b *assetQueryBuilderParam) getLocalAssetQuery() (any, error) {
+	collectionType := b.getCollectionType()
+	fmt.Println("collectionType", collectionType)
+
+	filterConditions := b.getFilterConditions()
+
+	switch collectionType {
+	case masterDbCommon.CollectionTypeERC721:
+		totalAssets, _, err := CountItemsWithFilter(b.config.localDb, "erc_721_collection_assets", filterConditions)
+		if err != nil {
+			return nil, err
+		}
+
+		assets, _ := QueryWithDynamicFilter[masterDbCommon.Erc721CollectionAssetResponse](b.config.localDb, "erc_721_collection_assets", *b.limit, *b.offset, filterConditions)
+		return Pagination[masterDbCommon.Erc721CollectionAssetResponse]{
+			Page:       *b.page,
+			Limit:      *b.limit,
+			TotalItems: int64(totalAssets),
+			TotalPages: (int64(totalAssets) + int64(*b.limit) - 1) / int64(*b.limit),
+			Data:       assets,
+		}, nil
+
+	case masterDbCommon.CollectionTypeERC1155:
+		totalAssets, _, err := CountItemsWithFilter(b.config.localDb, "erc_1155_collection_assets", filterConditions)
+		if err != nil {
+			return nil, err
+		}
+
+		assets, _ := QueryWithDynamicFilter[masterDbCommon.Erc1155CollectionAssetResponse](b.config.localDb, "erc_1155_collection_assets", *b.limit, *b.offset, filterConditions)
+		return Pagination[masterDbCommon.Erc1155CollectionAssetResponse]{
+			Page:       *b.page,
+			Limit:      *b.limit,
+			TotalItems: int64(totalAssets),
+			TotalPages: (int64(totalAssets) + int64(*b.limit) - 1) / int64(*b.limit),
+			Data:       assets,
+		}, nil
+
+	case masterDbCommon.CollectionTypeERC20:
+		totalAssets, _, err := CountItemsWithFilter(b.config.localDb, "erc_20_collection_assets", filterConditions)
+		if err != nil {
+			return nil, err
+		}
+
+		assets, _ := QueryWithDynamicFilter[masterDbCommon.Erc20CollectionAssetResponse](b.config.localDb, "erc_20_collection_assets", *b.limit, *b.offset, filterConditions)
+		return Pagination[masterDbCommon.Erc20CollectionAssetResponse]{
+			Page:       *b.page,
+			Limit:      *b.limit,
+			TotalItems: int64(totalAssets),
+			TotalPages: (int64(totalAssets) + int64(*b.limit) - 1) / int64(*b.limit),
+			Data:       assets,
+		}, nil
+	}
+
+	return nil, nil
+}
+
+func (b *assetQueryBuilderParam) getMasterDbAsset() (any, error) {
+	httpClient := b.getHttpClient()
+	collectionType := b.getCollectionType()
 	fmt.Println("collectionType", collectionType)
 
 	requestBody := map[string]interface{}{
@@ -183,6 +255,41 @@ func (b *assetQueryBuilderParam) GetPaginatedAsset() (any, error) {
 	return nil, nil
 }
 
+func (b *assetQueryBuilderParam) GetPaginatedAsset() (any, error) {
+
+	if !b.config.useMasterDb {
+		return b.getLocalAssetQuery()
+	}
+	return b.getMasterDbAsset()
+
+}
+
 func NewAssetQueryBuilder(config *masterDbConfig) AssetQueryBuilder {
 	return &assetQueryBuilderParam{config: config}
+}
+
+func (b *assetQueryBuilderParam) getFilterConditions() map[string][]string {
+	filterConditions := make(map[string][]string)
+
+	if b.collectionId != nil {
+		filterConditions["collection_id"] = []string{*b.collectionId}
+	}
+
+	if b.tokenIds != nil && len(*b.tokenIds) > 0 {
+		filterConditions["token_id"] = *b.tokenIds
+	}
+
+	if b.owner != nil {
+		filterConditions["owner"] = []string{*b.owner}
+	}
+
+	if b.createdAtFrom != nil {
+		filterConditions["created_at_from"] = []string{b.createdAtFrom.Format(time.RFC3339)}
+	}
+
+	if b.createdAtTo != nil {
+		filterConditions["created_at_to"] = []string{b.createdAtTo.Format(time.RFC3339)}
+	}
+
+	return filterConditions
 }
