@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -42,9 +43,11 @@ func main() {
 		WithLimit(10).
 		Build()
 
-	_, err = asset.GetPaginatedAsset()
+	assets, err := asset.GetPaginatedAsset()
 	if err != nil {
 		log.Fatalf("Error getting paginated assets: %v", err)
 	}
+
+	fmt.Println("assets", assets)
 
 }

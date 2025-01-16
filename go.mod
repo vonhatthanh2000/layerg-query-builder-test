@@ -14,7 +14,7 @@ require (
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
-	github.com/u2u-labs/go-layerg-common v0.0.0-20250116021244-11f56dfaf926 // indirect
+	github.com/u2u-labs/go-layerg-common v0.0.0-20250116043201-bbd9e24aa670 // indirect
 	github.com/unicornultrafoundation/go-u2u v1.1.4 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
