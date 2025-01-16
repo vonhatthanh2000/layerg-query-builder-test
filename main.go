@@ -1,12 +1,12 @@
 package main
 
 import (
-	"asset-query/pkg/query"
 	"database/sql"
 	"log"
 	"time"
 
 	_ "github.com/lib/pq"
+	common "github.com/u2u-labs/go-layerg-common/masterdb"
 )
 
 func main() {
@@ -19,9 +19,9 @@ func main() {
 	}
 
 	// Initialize database configuration
-	masterDbClient, err := query.NewMasterDbConfig(
+	masterDbClient, err := common.NewMasterDbConfig(
 		localDb,
-		"https://44b3-14-241-247-139.ngrok-free.app",
+		"https://0c4d-14-241-247-139.ngrok-free.app",
 		true,
 	)
 	if err != nil {

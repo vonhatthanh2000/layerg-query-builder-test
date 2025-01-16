@@ -37,6 +37,10 @@ func (b *assetQueryBuilderParam) getHttpClient() *HttpClient {
 	return client
 }
 
+func NewAssetQueryBuilder(config *masterDbConfig) AssetQueryBuilder {
+	return &assetQueryBuilderParam{config: config}
+}
+
 // WithChainId implements AssetQueryBuilder.
 func (b *assetQueryBuilderParam) getCollectionType() masterDbCommon.CollectionType {
 	client := b.getHttpClient()
@@ -262,10 +266,6 @@ func (b *assetQueryBuilderParam) GetPaginatedAsset() (any, error) {
 	}
 	return b.getMasterDbAsset()
 
-}
-
-func NewAssetQueryBuilder(config *masterDbConfig) AssetQueryBuilder {
-	return &assetQueryBuilderParam{config: config}
 }
 
 func (b *assetQueryBuilderParam) getFilterConditions() map[string][]string {

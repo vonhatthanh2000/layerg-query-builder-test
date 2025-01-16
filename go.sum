@@ -26,6 +26,8 @@ github.com/u2u-labs/go-layerg-common v0.0.0-20250110105347-ae721a16c3c1 h1:Ic8Td
 github.com/u2u-labs/go-layerg-common v0.0.0-20250110105347-ae721a16c3c1/go.mod h1:BqvM4bTnKFQ//ywEnLrrYZEPi3XOM6jBTWrxQ7KLhGQ=
 github.com/u2u-labs/go-layerg-common v0.0.0-20250113044906-d2ce4db5fc00 h1:U2lcpLAmj3bz5y2lPQ3Ai8GZQSUoYJvW9y18+U3huNs=
 github.com/u2u-labs/go-layerg-common v0.0.0-20250113044906-d2ce4db5fc00/go.mod h1:BqvM4bTnKFQ//ywEnLrrYZEPi3XOM6jBTWrxQ7KLhGQ=
+github.com/u2u-labs/go-layerg-common v0.0.0-20250116021244-11f56dfaf926 h1:lHjyeR7A6wWMxJ/dOWEPrPbQTvaA56sx0z+ESiibFrs=
+github.com/u2u-labs/go-layerg-common v0.0.0-20250116021244-11f56dfaf926/go.mod h1:yQCm19UH54S5ZsXzkL/pj1qrdJ2Xl/gzfxg0W4rWiWg=
 github.com/unicornultrafoundation/go-u2u v1.1.4 h1:MZd7u+7fHja9BXYhhmEuMGJjnAPvGzVVMq368GsBKHE=
 github.com/unicornultrafoundation/go-u2u v1.1.4/go.mod h1:b9zcgcucO/9gFdJV6c8V6pIJtpFQpzBhzWRPrcjq1l0=
 golang.org/x/crypto v0.32.0 h1:euUpcYgM8WcP71gNpTqQCn6rC2t6ULUPiOzfWaXVVfc=
