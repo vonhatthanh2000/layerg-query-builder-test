@@ -1,12 +1,13 @@
 package main
 
 import (
-	"asset-query/pkg/query"
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
 	_ "github.com/lib/pq"
+	common "github.com/u2u-labs/go-layerg-common/masterdb"
 )
 
 func main() {
@@ -19,9 +20,9 @@ func main() {
 	}
 
 	// Initialize database configuration
-	masterDbClient, err := query.NewMasterDbConfig(
+	masterDbClient, err := common.NewMasterDbConfig(
 		localDb,
-		"https://44b3-14-241-247-139.ngrok-free.app",
+		"https://0c4d-14-241-247-139.ngrok-free.app",
 		true,
 	)
 	if err != nil {
@@ -42,9 +43,11 @@ func main() {
 		WithLimit(10).
 		Build()
 
-	_, err = asset.GetPaginatedAsset()
+	assets, err := asset.GetPaginatedAsset()
 	if err != nil {
 		log.Fatalf("Error getting paginated assets: %v", err)
 	}
+
+	fmt.Println("assets", assets)
 
 }
